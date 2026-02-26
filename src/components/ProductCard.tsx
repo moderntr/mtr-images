@@ -1,12 +1,24 @@
 import { Product } from "@/lib/api";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Link2, Check } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 interface Props {
   product: Product;
 }
 
 const ProductCard = ({ product }: Props) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(product.product_url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <Link
       to={`/product/${product.product_id}`}
@@ -24,14 +36,29 @@ const ProductCard = ({ product }: Props) => {
           <ImageIcon className="h-3 w-3" />
           {product.images.length}
         </div>
+        {product.is_boosted && (
+          <div className="absolute top-2 left-2 rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">
+            Boosted
+          </div>
+        )}
       </div>
       <div className="p-3">
         <h3 className="truncate font-display text-sm font-semibold text-card-foreground">
           {product.product_name}
         </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {product.images.length} image{product.images.length !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-xs text-muted-foreground">
+            {product.category?.name || "Uncategorized"}
+          </p>
+          <button
+            onClick={handleCopyLink}
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            title="Copy product link"
+          >
+            {copied ? <Check className="h-3 w-3 text-primary" /> : <Link2 className="h-3 w-3" />}
+            {copied ? "Copied" : "Link"}
+          </button>
+        </div>
       </div>
     </Link>
   );
