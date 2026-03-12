@@ -64,9 +64,17 @@ export async function fetchAllProductImages(): Promise<ProductImage[]> {
   const allImages: ProductImage[] = [];
   let page = 1;
   const perPage = 100;
+  let total: number | null = null;
   while (true) {
-    const data = await fetchProductImages(page, perPage);
+    let data: ApiResponse;
+    try {
+      data = await fetchProductImages(page, perPage);
+    } catch (err) {
+      console.error(`Failed to fetch page ${page}, returning partial results:`, err);
+      break;
+    }
     allImages.push(...data.images);
+    if (total === null) total = data.total;
     if (allImages.length >= data.total || data.images.length < perPage) break;
     page++;
   }
@@ -85,11 +93,14 @@ export function groupByProduct(images: ProductImage[]): Product[] {
         category: img.category,
         is_boosted: img.is_boosted,
         images: [],
-        cover_image: img.thumbnail_url,
+        cover_image: img.thumbnail_url || img.image_url,
         view_count: img.view_count,
       });
     }
-    map.get(img.product_id)!.images.push(img);
+    const entry = map.get(img.product_id)!;
+    // Any image in the product can confirm is_boosted status
+    if (img.is_boosted) entry.is_boosted = true;
+    entry.images.push(img);
   }
   return Array.from(map.values());
 }
