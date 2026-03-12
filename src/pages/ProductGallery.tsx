@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { Product, ProductImage, fetchProductImages, groupByProduct } from "@/lib/api";
+import { Product, ProductImage, fetchImagesByProductId, groupByProduct } from "@/lib/api";
 import ImageLightbox from "@/components/ImageLightbox";
 import { ArrowLeft, Check, CheckSquare, Download, Loader2, Square, ImageIcon } from "lucide-react";
 import JSZip from "jszip";
@@ -18,27 +18,24 @@ const ProductGallery = () => {
   const [downloading, setDownloading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Fallback: fetch if no state passed
+  // Fallback: fetch all images for this product by product_id (so no images are lost)
   useEffect(() => {
     if (passedProduct || !id) return;
     setLoading(true);
-    // Fetch pages until we find the product
-    const findProduct = async () => {
-      let page = 1;
-      while (page <= 100) {
-        const data = await fetchProductImages(page, 100);
-        const products = groupByProduct(data.images);
+    const loadProduct = async () => {
+      try {
+        const images = await fetchImagesByProductId(Number(id));
+        const products = groupByProduct(images);
         const found = products.find((p) => p.product_id === Number(id));
-        if (found) {
-          setProduct(found);
-          break;
-        }
-        if (data.images.length < 100) break;
-        page++;
+        setProduct(found ?? null);
+      } catch (e) {
+        console.error(e);
+        setProduct(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    findProduct();
+    loadProduct();
   }, [id, passedProduct]);
 
   const toggleSelect = (imgId: number) => {

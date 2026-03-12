@@ -32,9 +32,15 @@ const ProductCard = ({ product }: Props) => {
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
         />
-        <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
+        <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
           <ImageIcon className="h-3 w-3" />
           {product.images.length}
+          {typeof product.view_count === "number" && product.view_count > 0 && (
+            <>
+              <span className="opacity-60">·</span>
+              <span>{product.view_count} view{product.view_count !== 1 ? "s" : ""}</span>
+            </>
+          )}
         </div>
         {product.is_boosted && (
           <div className="absolute top-2 left-2 rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">
