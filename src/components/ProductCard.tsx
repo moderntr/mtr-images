@@ -25,7 +25,7 @@ const ProductCard = ({ product }: Props) => {
       state={{ product }}
       className="group block overflow-hidden rounded-lg border border-border bg-card transition-all hover:shadow-lg hover:border-primary/30"
     >
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      <div className="relative aspect-[4/5] overflow-hidden bg-muted">
         <img
           src={product.cover_image}
           alt={product.product_name}
@@ -33,7 +33,7 @@ const ProductCard = ({ product }: Props) => {
           loading="lazy"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
-        <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
+        <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm whitespace-nowrap">
           <ImageIcon className="h-3 w-3" />
           {product.images.length}
           {typeof product.view_count === "number" && product.view_count > 0 && (
