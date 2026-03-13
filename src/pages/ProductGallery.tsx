@@ -13,30 +13,31 @@ const ProductGallery = () => {
   const passedProduct = (location.state as { product?: Product })?.product;
 
   const [product, setProduct] = useState<Product | null>(passedProduct || null);
-  const [loading, setLoading] = useState(!passedProduct);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [downloading, setDownloading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Fallback: fetch all images for this product by product_id (so no images are lost)
+  // Always fetch fresh images from the API to ensure the full image list is shown.
+  // passedProduct is used only as an instant cover while the fetch loads.
   useEffect(() => {
-    if (passedProduct || !id) return;
+    if (!id) return;
     setLoading(true);
     const loadProduct = async () => {
       try {
         const images = await fetchImagesByProductId(Number(id));
         const products = groupByProduct(images);
         const found = products.find((p) => p.product_id === Number(id));
-        setProduct(found ?? null);
+        setProduct(found ?? passedProduct ?? null);
       } catch (e) {
         console.error(e);
-        setProduct(null);
+        setProduct(passedProduct ?? null);
       } finally {
         setLoading(false);
       }
     };
     loadProduct();
-  }, [id, passedProduct]);
+  }, [id]);
 
   const toggleSelect = (imgId: number) => {
     setSelected((prev) => {
