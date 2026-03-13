@@ -58,6 +58,8 @@ const ProductGallery = () => {
     }
   };
 
+  const PROXY_BASE = "https://moderntrademarket.com/api/v1/media/proxy/?url=";
+
   const handleDownload = useCallback(async () => {
     if (!product || selected.size === 0) return;
     setDownloading(true);
@@ -66,9 +68,11 @@ const ProductGallery = () => {
       const toDownload = product.images.filter((img) => selected.has(img.id));
       await Promise.all(
         toDownload.map(async (img, i) => {
-          const res = await fetch(img.image_url);
+          // Route through Django proxy to bypass S3 CORS restrictions on fetch()
+          const proxyUrl = `${PROXY_BASE}${encodeURIComponent(img.image_url)}`;
+          const res = await fetch(proxyUrl);
           const blob = await res.blob();
-          const ext = img.image_url.split(".").pop() || "jpg";
+          const ext = img.image_url.split(".").pop()?.split("?")[0] || "jpg";
           zip.file(`${product.product_name}_${i + 1}.${ext}`, blob);
         })
       );
