@@ -13,7 +13,8 @@ const ProductCard = ({ product }: Props) => {
   const handleCopyLink = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(product.product_url).then(() => {
+    const shareUrl = `${window.location.origin}/product/${product.product_id}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
