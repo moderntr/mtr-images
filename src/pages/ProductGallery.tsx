@@ -26,6 +26,8 @@ const ProductGallery = () => {
     const loadProduct = async () => {
       try {
         const images = await fetchImagesByProductId(Number(id));
+        console.log(`[ProductGallery] Fetched ${images.length} images for product ${id}`);
+        images.forEach((img, i) => console.log(`  [${i}] image_url=${img.image_url}`));
         const products = groupByProduct(images);
         const found = products.find((p) => p.product_id === Number(id));
         setProduct(found ?? passedProduct ?? null);
@@ -158,13 +160,30 @@ const ProductGallery = () => {
                   isSelected ? "border-primary shadow-md" : "border-transparent hover:border-border"
                 }`}
               >
-                <img
-                  src={img.thumbnail_url}
-                  alt={img.product_name}
-                  className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                  loading="lazy"
-                  onClick={() => setLightboxIndex(idx)}
-                />
+                {img.image_url ? (
+                  <img
+                    src={img.image_url}
+                    alt={img.product_name}
+                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                    loading="lazy"
+                    onClick={() => setLightboxIndex(idx)}
+                    onError={(e) => {
+                      console.warn(`[ProductGallery] Failed to load: ${img.image_url}`);
+                      const parent = e.currentTarget.parentElement;
+                      e.currentTarget.style.display = 'none';
+                      if (parent) {
+                        parent.classList.add('bg-muted', 'flex', 'items-center', 'justify-center');
+                        const icon = document.createElement('div');
+                        icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground opacity-40"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+                        parent.appendChild(icon);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-muted">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground opacity-40" />
+                  </div>
+                )}
                 {/* Select overlay */}
                 <button
                   onClick={(e) => {

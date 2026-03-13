@@ -31,6 +31,7 @@ const ProductCard = ({ product }: Props) => {
           alt={product.product_name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
           <ImageIcon className="h-3 w-3" />

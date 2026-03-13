@@ -93,7 +93,7 @@ export function groupByProduct(images: ProductImage[]): Product[] {
         category: img.category,
         is_boosted: img.is_boosted,
         images: [],
-        cover_image: img.thumbnail_url || img.image_url,
+        cover_image: img.image_url,
         view_count: img.view_count,
       });
     }
