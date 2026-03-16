@@ -164,9 +164,10 @@ const ProductGallery = () => {
                   isSelected ? "border-primary shadow-md" : "border-transparent hover:border-border"
                 }`}
               >
-                {img.image_url ? (
+                {(img.thumbnail_url || img.image_url) ? (
                   <img
-                    src={img.image_url}
+                    // Use thumbnail for the grid where possible for faster loading
+                    src={img.thumbnail_url || img.image_url}
                     alt={img.product_name}
                     className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                     loading="lazy"
