@@ -63,7 +63,8 @@ export async function fetchImagesByProductId(productId: number): Promise<Product
 export async function fetchAllProductImages(): Promise<ProductImage[]> {
   const allImages: ProductImage[] = [];
   let page = 1;
-  const perPage = 100;
+  const perPage = 80;
+  const MAX_IMAGES = 400; // Hard cap for marketing gallery to keep initial load fast
   let total: number | null = null;
   while (true) {
     let data: ApiResponse;
@@ -74,6 +75,9 @@ export async function fetchAllProductImages(): Promise<ProductImage[]> {
       break;
     }
     allImages.push(...data.images);
+    if (allImages.length >= MAX_IMAGES) {
+      break;
+    }
     if (total === null) total = data.total;
     if (allImages.length >= data.total || data.images.length < perPage) break;
     page++;
