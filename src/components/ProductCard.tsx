@@ -13,7 +13,14 @@ const ProductCard = ({ product }: Props) => {
   const handleCopyLink = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const shareUrl = `${window.location.origin}/product/${product.product_id}`;
+    // Copy main ecommerce product link (same style as mobile app share URL)
+    const hyphenatedName = product.product_name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .trim()
+      .split(/\s+/)
+      .join("-");
+    const shareUrl = `https://moderntrademarket.com/shop/product-description/${hyphenatedName}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
