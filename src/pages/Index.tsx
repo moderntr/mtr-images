@@ -1,25 +1,58 @@
 import { useState, useEffect, useMemo } from "react";
-import { fetchAllProductImages, groupByProduct, extractCategories, Product, ProductImage, Category } from "@/lib/api";
+import { fetchProductImages, groupByProduct, extractCategories, Product, ProductImage, Category } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
-import { Search, Loader2, ChevronLeft, ChevronRight, ImageIcon, Sparkles } from "lucide-react";
+import { Search, Loader2, ImageIcon, Sparkles } from "lucide-react";
 
 type FilterTab = "all" | "boosted" | number;
 
 const Index = () => {
   const [allImages, setAllImages] = useState<ProductImage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [apiPage, setApiPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
-  const [page, setPage] = useState(1);
-  const perPage = 20;
+  const perPage = 80; // backend page size
 
+  // Load first page of images on mount
   useEffect(() => {
-    setLoading(true);
-    fetchAllProductImages()
-      .then(setAllImages)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const loadFirstPage = async () => {
+      try {
+        setInitialLoading(true);
+        const data = await fetchProductImages(1, perPage);
+        setAllImages(data.images);
+        setHasMore(data.images.length < data.total);
+        setApiPage(1);
+      } catch (err) {
+        console.error("Failed to load marketing gallery images", err);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    loadFirstPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const nextPage = apiPage + 1;
+      const data = await fetchProductImages(nextPage, perPage);
+      setAllImages((prev) => [...prev, ...data.images]);
+      setApiPage(nextPage);
+      if (data.images.length === 0 || prevLengthPlus(data.images.length, allImages.length) >= data.total) {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Failed to load more marketing gallery images", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const prevLengthPlus = (added: number, current: number) => current + added;
 
   const allProducts = useMemo(() => groupByProduct(allImages), [allImages]);
   const categories = useMemo(() => extractCategories(allProducts), [allProducts]);
@@ -43,13 +76,7 @@ const Index = () => {
     return result;
   }, [allProducts, activeTab, search]);
 
-  // Reset page on filter change
-  useEffect(() => {
-    setPage(1);
-  }, [activeTab, search]);
-
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+  const visibleProducts = filtered;
 
   const tabs: { key: FilterTab; label: string; icon?: React.ReactNode }[] = [
     { key: "all", label: "All Products" },
@@ -111,11 +138,24 @@ const Index = () => {
 
       {/* Content */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        {initialLoading ? (
+          <div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="animate-pulse overflow-hidden rounded-lg border border-border bg-card"
+                >
+                  <div className="relative aspect-[4/5] bg-muted" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-3 w-3/4 rounded bg-muted" />
+                    <div className="h-3 w-1/2 rounded bg-muted" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : paged.length === 0 ? (
+        ) : visibleProducts.length === 0 ? (
           <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
             <ImageIcon className="h-12 w-12 mb-3 opacity-40" />
             <p className="text-sm">No products found</p>
@@ -123,30 +163,21 @@ const Index = () => {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {paged.map((product) => (
+              {visibleProducts.map((product) => (
                 <ProductCard key={product.product_id} product={product} />
               ))}
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-2">
+            {/* Load more */}
+            {hasMore && (
+              <div className="mt-8 flex items-center justify-center">
                 <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="rounded-lg border border-border bg-card p-2 text-card-foreground transition-colors hover:bg-secondary disabled:opacity-30"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-card-foreground hover:bg-secondary disabled:opacity-50"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="px-3 text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="rounded-lg border border-border bg-card p-2 text-card-foreground transition-colors hover:bg-secondary disabled:opacity-30"
-                >
-                  <ChevronRight className="h-4 w-4" />
+                  {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {loadingMore ? "Loading more…" : "Load more products"}
                 </button>
               </div>
             )}
