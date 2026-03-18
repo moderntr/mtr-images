@@ -65,14 +65,28 @@ const ProductCard = ({ product }: Props) => {
           <p className="text-xs text-muted-foreground">
             {product.category?.name || "Uncategorized"}
           </p>
-          <button
-            onClick={handleCopyLink}
-            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-            title="Copy product link"
-          >
-            {copied ? <Check className="h-3 w-3 text-primary" /> : <Link2 className="h-3 w-3" />}
-            {copied ? "Copied" : "Link"}
-          </button>
+          <div className="flex items-center gap-2">
+            {product.product_url && (
+              <a
+                href={product.product_url}
+                onClick={(e) => e.stopPropagation()}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                title="Open product on main website"
+              >
+                Open
+              </a>
+            )}
+            <button
+              onClick={handleCopyLink}
+              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+              title="Copy product link"
+            >
+              {copied ? <Check className="h-3 w-3 text-primary" /> : <Link2 className="h-3 w-3" />}
+              {copied ? "Copied" : "Link"}
+            </button>
+          </div>
         </div>
       </div>
     </Link>
